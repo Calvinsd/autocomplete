@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <title>Document</title>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .searchbox {
+            padding: 20px;
+        }
+
+        h1{
+            color:coral;
+            font-weight: bold;
+            font-family:Georgia, 'Times New Roman', Times, serif
+        }
+
+        .searchbox #searchtext {
+            width: 250px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="searchbox">
+        <h1 class="animate__animated animate__lightSpeedInRight">AUTOCOMPLETE</h1>
+        <form class="searchform">
+            <input id="searchtext" type="text" placeholder="type here" list="recommendations" autocomplete="off">
+            <datalist id="recommendations">
+                
+            </datalist>
+            <input type="submit" value="submit">
+        </form>
+    </div>
+</body>
+
+<script>
+    let searchForm = document.querySelector(".searchform")
+    let searchSection = document.querySelector('#searchtext')
+
+    // recommendation event listner
+    searchSection.addEventListener('input', search)
+
+    // submit event listner
+    searchForm.addEventListener('submit',handleFormSubmit)
+
+    // handles submit
+    async function handleFormSubmit(event) {
+        event.preventDefault()
+
+        let searchData =  document.querySelector('#searchtext').value
+
+        let response = await fetch(`/search?q=${searchData}`)
+        let data = JSON.parse(await response.text())
+
+        let searchBox = document.querySelector(".searchbox")
+
+        if(data.found) {
+            let res = document.createElement("h1")
+            res.textContent = "Data Found!";
+            res.setAttribute("class","animate__animated animate__fadeInLeft")
+            res.style.color = "green"
+            searchBox.appendChild(res)
+            setTimeout(()=>{
+                res.setAttribute("class","animate__animated animate__hinge")
+                setTimeout(()=> {
+                    res.remove()
+                },2000)
+            },1500)
+
+            
+        } else {
+            let res = document.createElement("h1")
+            res.textContent = "Data Not Found!";
+            res.setAttribute("class","animate__animated animate__fadeInLeft")
+            res.style.color = "red"
+            searchBox.appendChild(res)
+            setTimeout(()=>{
+                res.setAttribute("class","animate__animated animate__hinge")
+                setTimeout(()=> {
+                    res.remove()
+                },2000)
+            },2000)
+        }
+        
+    }
+
+    // handles recommendation
+    async function search(event) {
+        console.log('received input',event.target.value)
+        let recommendationSelector = document.querySelector('#recommendations')
+
+        while(recommendationSelector.firstChild) {
+            recommendationSelector.removeChild(recommendationSelector.firstChild)
+        }
+
+        let response = await fetch(`/search/recommendations?q=${event.target.value}`)
+        let data = await response.text()
+
+        const parsedData = JSON.parse(data)
+        console.log(parsedData)
+
+        parsedData.recommendations.forEach(recommendation => {
+            let option = document.createElement("option");
+            option.value = recommendation;
+            recommendationSelector.appendChild(option);
+        });
+
+    }
+</script>
+</html>
